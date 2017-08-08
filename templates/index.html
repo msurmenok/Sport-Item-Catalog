@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "header.html" %}
+    <div class="row">
+        <div class="col-md-5">
+            <h2>Categories</h2>
+            <ul>
+                {% for category in categories %}
+                <li>{{ category.name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-7">
+            <h2>Latest Items</h2>
+            <ul>
+                {% for item in items %}
+                <li>{{ item.name }} ({{ item.category.name }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

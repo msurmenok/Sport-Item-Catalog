@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, User, Category, Item
@@ -21,14 +21,8 @@ def index():
     output = ''
     categories = db_session.query(Category).order_by(Category.name)
     last_items = db_session.query(Item).order_by(desc(Item.id)).limit(10)
-    for cat in categories:
-        output += cat.name + '<br>'
-    output += '<br><hr><br>'
-    for item in last_items:
-        output += item.name + ' (' + item.category.name + ')<br>'
-    return output
 
-
+    return render_template('index.html', categories=categories, items=last_items)
 
 
 # At the end start Flask app.
