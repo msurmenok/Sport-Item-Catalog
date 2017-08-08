@@ -41,7 +41,18 @@ item1 = Item(name='Snowboard',
              category=cat1,
              user=user1)
 
-item2 = Item(name='Tardis',
+item2 = Item(name='Helmet',
+             description='May include many additional features such as vents,'
+                         ' earmuffs, headphones, goggle mounts, '
+                         'and camera mounts.',
+             category=cat1,
+             user=user1)
+
+item3 = Item(name='Ball',
+             category=cat3,
+             user=user1)
+
+item4 = Item(name='Tardis',
              description='Time And Relative Dimension In Space is a '
                          'time-travelling spacecraft created by the'
                          ' Time Lords, an advanced extraterrestrial '
@@ -52,8 +63,18 @@ item2 = Item(name='Tardis',
              user=user2
              )
 
+item5 = Item(name='Sonic screwdriver',
+             description='Multifunctional fictional tool. '
+                         'Gets you into anything',
+             category=cat6,
+             user=user2
+             )
+
 db_session.add(item1)
 db_session.add(item2)
+db_session.add(item3)
+db_session.add(item4)
+db_session.add(item5)
 
 db_session.commit()
 
