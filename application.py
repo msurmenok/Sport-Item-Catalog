@@ -1,7 +1,10 @@
-from flask import Flask, render_template, url_for, jsonify
+from flask import Flask, render_template, url_for, jsonify, session
 from sqlalchemy import create_engine, asc, desc
+
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, User, Category, Item
+
+import httplib2, json, requests, random, string
 
 
 app = Flask(__name__)
@@ -52,6 +55,19 @@ def deleteItem(item_name):
     pass
 
 
+@app.route('/login/')
+def login():
+    state = ''.join([random.choice(string.ascii_letters + string.digits) for x in range(0, 32)])
+    session['state'] = state
+    return render_template('login.html', state=state)
+
+
+# Facebook OAuth
+@app.route('/fbconnect', methods=['POST'])
+def fbconnect():
+    pass
+
+
 # JSON API.
 @app.route('/catalog.json/')
 def getCatalogJSON():
@@ -73,6 +89,7 @@ def getItemJSON(category_name, item_name):
     item = db_session.query(Item).filter_by(name=item_name, category=category).one()
     return jsonify(Item=item.serialize)
 
+
 # JSON Helper functions.
 def createCategoryDict(category):
     serialized_category = category.serialize
@@ -85,5 +102,6 @@ def createCategoryDict(category):
 
 # At the end start Flask app.
 if __name__ == '__main__':
+    app.secret_key = 'ADD YOUR SECRET KEY HERE'
     app.debug = True
     app.run(host='0.0.0.0', port=8000)
