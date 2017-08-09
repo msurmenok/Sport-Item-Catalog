@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "header.html" %}
+    <div class="row">
+        <div class="col-md-5">
+            <h2>Categories</h2>
+            <ul>
+                {% for category in categories %}
+                    {% if category.name == current_category.name %}
+                    <li>
+                        <strong>
+                            <a href="{{ url_for('showCategory', category_name=category.name) }}">
+                                {{ category.name }}
+                            </a>
+                        </strong>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="{{ url_for('showCategory', category_name=category.name) }}">
+                            {{ category.name }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-7">
+            <h2>{{ current_category.name }} Items ({{ items | length}} items)</h2>
+            <ul>
+                {% for item in items %}
+                <li>{{ item.name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

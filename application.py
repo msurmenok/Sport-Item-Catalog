@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, User, Category, Item
@@ -24,6 +24,17 @@ def index():
 
     return render_template('index.html', categories=categories, items=last_items)
 
+
+@app.route('/catalog/<category_name>/')
+@app.route('/catalog/<category_name>/items/')
+def showCategory(category_name):
+    categories = db_session.query(Category).order_by(Category.name)
+    current_category = db_session.query(Category).filter_by(name=category_name).one()
+    print(current_category.id)
+    print(current_category.name)
+    items = db_session.query(Item).filter_by(category_id=current_category.id).all()
+    return render_template('category.html', items=items,
+                           current_category=current_category, categories=categories)
 
 # At the end start Flask app.
 if __name__ == '__main__':
