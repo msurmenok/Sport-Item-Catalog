@@ -16,6 +16,9 @@ body {
 
 h1 a, h1 a:hover {
     color: white;
+}
+
+h1 a:hover, ul a:hover {
     text-decoration: none;
 }
 
@@ -35,4 +38,13 @@ ul li {
 
 ul li:hover {
     background-color: lightgray;
+    cursor: hand;
+}
+
+ul li a {
+    text-decoration: none;
+}
+
+.text-grey {
+    color: grey;
 }

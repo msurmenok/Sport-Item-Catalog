@@ -27,8 +27,7 @@ class Category(Base):
         """ Return information about Category and all its items in json format. """
         return {
             'id': self.id,
-            'name': self.name,
-            'Item': []  # get all items
+            'name': self.name
         }
 
 

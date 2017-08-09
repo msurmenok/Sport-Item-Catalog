@@ -17,9 +17,16 @@
         <div class="col-md-7">
             <h2>Latest Items</h2>
             <ul>
-                {% for item in items %}
-                <li>{{ item.name }} ({{ item.category.name }})</li>
-                {% endfor %}
+                <ul>
+                    {% for item in items %}
+                    <a href="{{ url_for('viewItem', category_name=item.category.name, item_name=item.name) }}">
+                        <li>
+                            {{ item.name }}
+                            <span class="text-grey">({{ item.category.name }})</span>
+                        </li>
+                    </a>
+                    {% endfor %}
+                </ul>
             </ul>
         </div>
     </div>

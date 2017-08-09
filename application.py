@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for, jsonify
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, User, Category, Item
@@ -26,7 +26,6 @@ def index():
 
 
 @app.route('/catalog/<category_name>/')
-@app.route('/catalog/<category_name>/items/')
 def showCategory(category_name):
     categories = db_session.query(Category).order_by(Category.name)
     current_category = db_session.query(Category).filter_by(name=category_name).one()
@@ -41,6 +40,47 @@ def viewItem(category_name, item_name):
     current_category = db_session.query(Category).filter_by(name=category_name).one()
     item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
     return render_template('item.html', item=item)
+
+
+@app.route('/catalog/<item_name>/edit')
+def editItem(item_name):
+    pass
+
+
+@app.route('/catalog/<item_name>/delete/')
+def deleteItem(item_name):
+    pass
+
+
+# JSON API.
+@app.route('/catalog.json/')
+def getCatalogJSON():
+    categories = db_session.query(Category).all()
+    return jsonify(Category=[createCategoryDict(category) for category in categories])
+
+
+@app.route('/<category_name>.json/')
+@app.route('/catalog/<category_name>.json/')
+def getCategoryJSON(category_name):
+    category = db_session.query(Category).filter_by(name=category_name).one()
+    return jsonify(Category=createCategoryDict(category))
+
+
+@app.route('/<category_name>/<item_name>.json/')
+@app.route('/catalog/<category_name>/<item_name>.json/')
+def getItemJSON(category_name, item_name):
+    category = db_session.query(Category).filter_by(name=category_name).one()
+    item = db_session.query(Item).filter_by(name=item_name, category=category).one()
+    return jsonify(Item=item.serialize)
+
+# JSON Helper functions.
+def createCategoryDict(category):
+    serialized_category = category.serialize
+
+    items = db_session.query(Item).filter_by(category_id=category.id).all()
+    if items:
+        serialized_category['items'] = [item.serialize for item in items]
+    return serialized_category
 
 
 # At the end start Flask app.
