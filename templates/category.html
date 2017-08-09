@@ -7,19 +7,19 @@
             <ul>
                 {% for category in categories %}
                     {% if category.name == current_category.name %}
-                    <li>
+                    <a href="{{ url_for('showCategory', category_name=category.name) }}">
+                        <li>
                         <strong>
-                            <a href="{{ url_for('showCategory', category_name=category.name) }}">
                                 {{ category.name }}
-                            </a>
                         </strong>
-                    </li>
+                        </li>
+                    </a>
                     {% else %}
-                    <li>
-                        <a href="{{ url_for('showCategory', category_name=category.name) }}">
+                    <a href="{{ url_for('showCategory', category_name=category.name) }}">
+                        <li>
                             {{ category.name }}
-                        </a>
-                    </li>
+                        </li>
+                    </a>
                     {% endif %}
                 {% endfor %}
             </ul>
@@ -28,7 +28,11 @@
             <h2>{{ current_category.name }} Items ({{ items | length}} items)</h2>
             <ul>
                 {% for item in items %}
-                <li>{{ item.name }}</li>
+                <a href="{{ url_for('viewItem', category_name=current_category.name, item_name=item.name) }}">
+                    <li>
+                        {{ item.name }}
+                    </li>
+                </a>
                 {% endfor %}
             </ul>
         </div>

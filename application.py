@@ -30,11 +30,17 @@ def index():
 def showCategory(category_name):
     categories = db_session.query(Category).order_by(Category.name)
     current_category = db_session.query(Category).filter_by(name=category_name).one()
-    print(current_category.id)
-    print(current_category.name)
     items = db_session.query(Item).filter_by(category_id=current_category.id).all()
+
     return render_template('category.html', items=items,
                            current_category=current_category, categories=categories)
+
+@app.route('/catalog/<category_name>/<item_name>/')
+def viewItem(category_name, item_name):
+    current_category = db_session.query(Category).filter_by(name=category_name).one()
+    item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
+    return render_template('item.html', item=item)
+
 
 # At the end start Flask app.
 if __name__ == '__main__':

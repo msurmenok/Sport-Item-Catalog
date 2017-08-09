@@ -4,6 +4,7 @@ body {
 
 .container {
     background-color: white;
+    min-height: 500px;
 }
 
 .top-menu {
@@ -12,10 +13,25 @@ body {
     padding-bottom: 20px;
 }
 
-h1 {
+h1 a, h1 a:hover {
     color: white;
+    text-decoration: none;
 }
 
 .btn-login {
     margin-top: 15px;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul li {
+    margin: 5px;
+}
+
+ul li:hover {
+    background-color: lightgray;
 }

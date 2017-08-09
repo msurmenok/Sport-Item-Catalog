@@ -6,11 +6,11 @@
             <h2>Categories</h2>
             <ul>
                 {% for category in categories %}
-                <li>
-                    <a href="{{ url_for('showCategory', category_name=category.name) }}">
+                <a href="{{ url_for('showCategory', category_name=category.name) }}">
+                    <li>
                         {{ category.name }}
-                    </a>
-                </li>
+                    </li>
+                </a>
                 {% endfor %}
             </ul>
         </div>
