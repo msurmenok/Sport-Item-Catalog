@@ -35,6 +35,7 @@ def showCategory(category_name):
     return render_template('category.html', items=items,
                            current_category=current_category, categories=categories)
 
+
 @app.route('/catalog/<category_name>/<item_name>/')
 def viewItem(category_name, item_name):
     current_category = db_session.query(Category).filter_by(name=category_name).one()

@@ -22,7 +22,7 @@ about SQLAlchemy ORM, Flask framework, and OAuth.
 * Connect to vm<br>
 `vagrant ssh`
 * Return to project folder<br>
-`cd ../../vagrant/ItemCatalog`
+`cd /vagrant/ItemCatalog`
 
 ### Run project
 * To initialize PostgreSQL database run<br>
