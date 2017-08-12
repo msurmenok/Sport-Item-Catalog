@@ -63,6 +63,14 @@ def addNewItem():
         return render_template('create_item.html', categories=categories)
     if request.method == 'POST':
         item_name = request.form['item_name']
+        description = request.form['description']
+        category_id = request.form['category_id']
+
+        new_item = Item(name=item_name, description=description, category_id=category_id, user_id=session['user_id'])
+        db_session.add(new_item)
+        db_session.commit()
+        flash('New item: "%s" added' % item_name)
+    return redirect(url_for('index'))
 
 
 @app.route('/catalog/<item_name>/edit')

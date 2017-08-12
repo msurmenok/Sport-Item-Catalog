@@ -8,11 +8,12 @@
                 <!-- name, description, category -->
                 <input type="text" name="item_name" placeholder="Item name">
                 <input type="text" name="description" placeholder="description (optional">
-                <select name="category">
+                <select name="category_id">
                     {% for category in categories %}
                     <option value="{{ category.id }}">{{ category.name }}</option>
                     {% endfor %}
                 </select>
+                <input type="submit" value="Submit">
             </form>
         </div>
     </div>
