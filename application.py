@@ -17,11 +17,21 @@ DBSession = sessionmaker(bind=engine)
 db_session = DBSession()
 
 
+# Decorators
+def user_logged_in(function):
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        if session['user_id']:
+            return function(*args, **kwargs)
+        else:
+            return redirect(url_for('login'))
+    return wrapper
+
+
 # Handle pages.
 @app.route('/')
 @app.route('/catalog/')
 def index():
-    output = ''
     categories = db_session.query(Category).order_by(Category.name)
     last_items = db_session.query(Item).order_by(desc(Item.id)).limit(10)
 
@@ -43,6 +53,16 @@ def viewItem(category_name, item_name):
     current_category = db_session.query(Category).filter_by(name=category_name).one()
     item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
     return render_template('item.html', item=item)
+
+
+@app.route('/catalog/new/', methods=['GET', 'POST'])
+@user_logged_in
+def addNewItem():
+    categories = db_session.query(Category).order_by(Category.name)
+    if request.method == 'GET':
+        return render_template('create_item.html', categories=categories)
+    if request.method == 'POST':
+        item_name = request.form['item_name']
 
 
 @app.route('/catalog/<item_name>/edit')
@@ -77,8 +97,6 @@ def disconnect():
         flash('You were successfully logged out.')
 
     return redirect(url_for('index'))
-
-
 
 
 # Facebook OAuth
@@ -200,18 +218,6 @@ def getUserID(email):
         return user.id
     except:
         return None
-
-
-# Decorators
-
-def user_logged_in(function):
-    @wraps(function)
-    def wrapper(self, *args, **kwargs):
-        if session['user_id']:
-            return function(self, *args, **kwargs)
-        else:
-            return redirect(url_for('login'))
-
 
 
 # At the end start Flask app.

@@ -30,6 +30,9 @@
             </ul>
         </div>
         <div class="col-md-7">
+            {% if 'user_id' in session %}
+                <a href="/catalog/new">Add Item</a>
+            {% endif %}
             <h2>Latest Items</h2>
             <ul>
                 <ul>
