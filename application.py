@@ -1,11 +1,11 @@
-from flask import Flask, render_template, url_for, jsonify, session, request, make_response
+from flask import Flask, render_template, url_for, jsonify, session, request, make_response, redirect
 from sqlalchemy import create_engine, asc, desc
 
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, User, Category, Item
 
 import httplib2, json, requests, random, string
-
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -62,6 +62,24 @@ def login():
     return render_template('login.html', state=state)
 
 
+@app.route('/disconnect/')
+def disconnect():
+    provider = session.get('provider')
+    if provider:
+        if provider == 'facebook':
+            fbdisconnect()
+            del session['facebook_id']
+        del session['name']
+        del session['email']
+        del session['picture']
+        del session['user_id']
+        del session['provider']
+        
+    return redirect(url_for('index'))
+
+
+
+
 # Facebook OAuth
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
@@ -89,7 +107,9 @@ def fbconnect():
     session['provider'] = 'facebook'
     session['name'] = data['name']
     session['email'] = data['email']
+    session['facebook_id'] = data['id']
     session['access_token'] = access_token
+
 
     # Get user picture.
     url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
@@ -114,6 +134,16 @@ def fbconnect():
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
 
     return output
+
+
+@app.route('/fbdisconnect/')
+def fbdisconnect():
+    facebook_id = session['facebook_id']
+    access_token = session['access_token']
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id, access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'DELETE')[1]
+    return 'You have been logged out'
 
 
 
@@ -169,6 +199,18 @@ def getUserID(email):
         return user.id
     except:
         return None
+
+
+# Decorators
+
+def user_logged_in(function):
+    @wraps(function)
+    def wrapper(self, *args, **kwargs):
+        if session['user_id']:
+            return function(self, *args, **kwargs)
+        else:
+            return redirect(url_for('login'))
+
 
 
 # At the end start Flask app.
