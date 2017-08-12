@@ -3,6 +3,10 @@
         <h1><a href="/">Catalog App</a></h1>
     </div>
     <div class="col-md-4 col-sm-6 col-xs-6 text-right">
-        <a href="#" class="btn btn-primary btn-lg btn-login">Log in</a>
+        {% if 'name' in session %}
+            <a href="/disconnect" class="btn btn-primary btn-lg btn-login">Log out</a>
+        {% else %}
+            <a href="/login" class="btn btn-primary btn-lg btn-login">Log in</a>
+        {% endif %}
     </div>
 </div>

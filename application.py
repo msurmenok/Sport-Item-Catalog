@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, jsonify, session, request, make_response, redirect
+from flask import Flask, render_template, url_for, jsonify, session, request, make_response, redirect, flash
 from sqlalchemy import create_engine, asc, desc
 
 from sqlalchemy.orm import sessionmaker
@@ -74,7 +74,8 @@ def disconnect():
         del session['picture']
         del session['user_id']
         del session['provider']
-        
+        flash('You were successfully logged out.')
+
     return redirect(url_for('index'))
 
 
@@ -132,7 +133,7 @@ def fbconnect():
     output += '<img src="'
     output += session['picture']
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-
+    flash('You were successfully logged in as %s' % session['name'])
     return output
 
 
