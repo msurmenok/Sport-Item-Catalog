@@ -33,7 +33,7 @@
                     processData: false,
                     data: access_token,
                     contentType: 'application/octet-stream; charset=utf-8',
-                    success: function(result) {
+                        success: function(result) {
                         if(result) {
                             $('.sign-in-btn').attr('style', 'display: none');
                             $('#result').html('Login Successful!<br>' + result + '<br>Redirecting...')

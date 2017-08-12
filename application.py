@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, jsonify, session
+from flask import Flask, render_template, url_for, jsonify, session, request, make_response
 from sqlalchemy import create_engine, asc, desc
 
 from sqlalchemy.orm import sessionmaker
@@ -65,7 +65,56 @@ def login():
 # Facebook OAuth
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
-    pass
+    if request.args.get('state') != session['state']:
+        response = make_response(json.dumps('Invalid state parameter.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    access_token = request.data
+    app_id = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_id']
+    app_secret = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_secret']
+
+    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' %\
+          (app_id, app_secret, access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+
+    token = result.split(',')[0].split(':')[1].replace('"', '')
+    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+
+    data = json.loads(result)
+    print(data)
+    session['provider'] = 'facebook'
+    session['name'] = data['name']
+    session['email'] = data['email']
+    session['access_token'] = access_token
+
+    # Get user picture.
+    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+    data = json.loads(result)
+
+    session['picture'] = data["data"]["url"]
+
+    user_id = getUserID(session['email'])
+    if not user_id:
+        createUser(session)
+    session['user_id'] = user_id
+
+    output = ''
+    output += '<h1>Welcome, '
+    output += session['name']
+
+    output += '!</h1>'
+    output += '<img src="'
+    output += session['picture']
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+
+    return output
+
 
 
 # JSON API.
@@ -90,7 +139,7 @@ def getItemJSON(category_name, item_name):
     return jsonify(Item=item.serialize)
 
 
-# JSON Helper functions.
+# JSON helper functions.
 def createCategoryDict(category):
     serialized_category = category.serialize
 
@@ -98,6 +147,28 @@ def createCategoryDict(category):
     if items:
         serialized_category['items'] = [item.serialize for item in items]
     return serialized_category
+
+
+# User helper functions.
+def createUser(session):
+    new_user = User(name=session['name'], email=session['email'], picture=session['picture'])
+    db_session.add(new_user)
+    db_session.commit()
+    user = db_session.query(User).filter_by(email=session['email']).one()
+    return user.id
+
+
+def getUserInfo(user_id):
+    user = db_session.query(User).filter_by(id=user_id).one()
+    return user
+
+
+def getUserID(email):
+    try:
+        user = db_session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
 
 
 # At the end start Flask app.
