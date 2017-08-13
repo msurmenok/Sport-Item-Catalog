@@ -4,15 +4,32 @@
     <div class="row">
         <div class="col-md-12">
             <h2>Create new item</h2>
+            {% if info %}
+                <div style="color:red;">{{ info['error'] }}</div>
+            {% endif %}
             <form action="{{ url_for('addNewItem') }}" method="POST">
                 <!-- name, description, category -->
                 <input type="text" name="item_name" placeholder="Item name">
-                <input type="text" name="description" placeholder="description (optional">
-                <select name="category_id">
-                    {% for category in categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-                </select>
+
+                {% if info %}
+                    <input type="text" name="description" placeholder="description (optional)" value="{{ info['description'] }}">
+                    <select name="category_id">
+                        {% for category in categories %}
+                            {% if category.id == info['category_id'] %}
+                                <option value="{{ category.id }}" selected>{{ category.name }}</option>
+                            {% else %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <input type="text" name="description" placeholder="description (optional)">
+                    <select name="category_id">
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
                 <input type="submit" value="Submit">
             </form>
         </div>

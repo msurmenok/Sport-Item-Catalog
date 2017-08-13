@@ -60,12 +60,18 @@ def viewItem(category_name, item_name):
 def addNewItem():
     categories = db_session.query(Category).order_by(Category.name)
     if request.method == 'GET':
-        return render_template('create_item.html', categories=categories)
+        return render_template('create_item.html', categories=categories, info=None)
     if request.method == 'POST':
         item_name = request.form['item_name']
         description = request.form['description']
         category_id = request.form['category_id']
-
+        # check that item_name is not empty, create flash if it is empty
+        if not item_name:
+            info = dict()
+            info['error'] = 'Name cannot be empty'
+            info['description'] = description
+            info['cat_id'] = category_id
+            return render_template('create_item.html', categories=categories, info=info)
         new_item = Item(name=item_name, description=description, category_id=category_id, user_id=session['user_id'])
         db_session.add(new_item)
         db_session.commit()
