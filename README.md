@@ -1,5 +1,5 @@
-# Item Catalog
-Study project for applying knowledge
+# Sport Item Catalog
+Study project. Applying knowledge
 about SQLAlchemy ORM, Flask framework, and OAuth.
 
 ## Running on VM
