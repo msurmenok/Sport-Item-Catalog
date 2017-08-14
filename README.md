@@ -15,6 +15,12 @@ about SQLAlchemy ORM, Flask framework, and OAuth.
 * Download project to vagrant folder<br>
 `git clone https://github.com/MariiaSurmenok/ItemCatalog.git`
 
+### OAuth Credentials
+#### Facebook login
+* to get credentials for Facebook, create a project in [Facebook developer console](https://developers.facebook.com/)
+* update file **fb_client_secrets.json** with your app_id and app_secret
+* go to file `/templates/login.html` and update value **appId** in line 9
+
 ### Start Virtual Machine
 * In terminal (in vagrant folder) launch virtual machine<br>
 `vagrant up`<br>
