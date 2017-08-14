@@ -66,7 +66,7 @@ def showCategory(category_name):
 def viewItem(category_name, item_name):
     current_category = db_session.query(Category).filter_by(name=category_name).one()
     item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
-    return render_template('item.html', item=item)
+    return render_template('item.html', category_name=category_name, item=item)
 
 
 @app.route('/catalog/new/', methods=['GET', 'POST'])

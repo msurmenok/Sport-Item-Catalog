@@ -9,4 +9,12 @@
             {{ item.description }}
         </div>
     </div>
+    <div class="row">
+        {% if 'user_id' in session and session['user_id'] == item.user_id %}
+        <div class="col-md-12">
+            <a href="{{ url_for('editItem', category_name=category_name, item_name=item.name) }}">Edit</a>
+            <a href="{{url_for('deleteItem', category_name=category_name, item_name=item.name) }}">Delete</a>
+        </div>
+        {% endif %}
+    </div>
 {% endblock %}
