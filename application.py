@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, jsonify, session, request, make_response, redirect, flash
+from flask import Flask, render_template, url_for, jsonify, session, request, make_response, redirect, flash, abort
 from sqlalchemy import create_engine, asc, desc
 
 from sqlalchemy.orm import sessionmaker
@@ -21,10 +21,24 @@ db_session = DBSession()
 def user_logged_in(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
-        if session['user_id']:
+        if 'user_id' in session:
             return function(*args, **kwargs)
         else:
             return redirect(url_for('login'))
+    return wrapper
+
+
+def user_owns_item(function):
+    @wraps(function)
+    def wrapper(category_name, item_name, *args, **kwargs):
+        category = db_session.query(Category).filter_by(name=category_name).one()
+        user_id = session['user_id']
+        item = db_session.query(Item).filter_by(category=category, name=item_name).one()
+
+        if item.user_id == user_id:
+            return function(category_name, item_name, *args, **kwargs)
+        else:
+            abort(403)
     return wrapper
 
 
@@ -65,28 +79,91 @@ def addNewItem():
         item_name = request.form['item_name']
         description = request.form['description']
         category_id = request.form['category_id']
-        # check that item_name is not empty, create flash if it is empty
+
+        # Check that item_name is not empty.
+        info = dict()
+        info['description'] = description
+        info['category_id'] = category_id
         if not item_name:
-            info = dict()
             info['error'] = 'Name cannot be empty'
-            info['description'] = description
-            info['cat_id'] = category_id
             return render_template('create_item.html', categories=categories, info=info)
+
+        # Check if such item is already exists.
+        items = db_session.query(Item).filter_by(category_id=category_id).all()
+        names = [item.name for item in items]
+        if item_name in names:
+            info['error'] = 'Such item already exists'
+            return render_template('create_item.html', categories=categories, info=info)
+
         new_item = Item(name=item_name, description=description, category_id=category_id, user_id=session['user_id'])
         db_session.add(new_item)
         db_session.commit()
-        flash('New item: "%s" added' % item_name)
+
+        flash('Item was created')
     return redirect(url_for('index'))
 
 
-@app.route('/catalog/<item_name>/edit')
-def editItem(item_name):
-    pass
+@app.route('/catalog/<category_name>/<item_name>/edit/', methods=['GET', 'POST'])
+@user_logged_in
+@user_owns_item
+def editItem(category_name, item_name):
+    categories = db_session.query(Category).order_by(Category.name)
+
+    current_category = db_session.query(Category).filter_by(name=category_name).one()
+    item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
+
+    info = dict()
+    info['item_name'] = item.name
+    info['description'] = item.description
+    info['category_id'] = item.category_id
+    info['category_name'] = category_name
+    info['error'] = ''
+
+    if request.method == 'GET':
+        return render_template('edit_item.html', categories=categories, info=info)
+
+    if request.method == 'POST':
+        item_name = request.form['item_name']
+        description = request.form['description']
+        category_id = request.form['category_id']
+
+        print("Current item name: %s" % item.name)
+        print("item name: %s" % item_name)
+        print("Description: %s" % description)
+        print("Category_id: %s" % category_id)
+        # Check that item_name is not empty.
+        info['description'] = description
+        info['category_id'] = category_id
+        if not item_name:
+            info['error'] = 'Name cannot be empty'
+            return render_template('edit_item.html', categories=categories, info=info)
+
+        # Check if such item is already exists.
+        items = db_session.query(Item).filter_by(category_id=category_id).all()
+        names = [i.name for i in items]
+        if item_name != item.name and item_name in names:
+            info['error'] = 'Item "%s" is already exists. The old one %s' % (item_name, item.name)
+            return render_template('edit_item.html', categories=categories, info=info)
+
+        item.name = item_name
+        item.description = description
+        item.category_id = category_id
+
+        db_session.commit()
+        flash('Item was edited')
+    return redirect(url_for('index'))
 
 
-@app.route('/catalog/<item_name>/delete/')
-def deleteItem(item_name):
-    pass
+@app.route('/catalog/<category_name>/<item_name>/delete/')
+@user_logged_in
+@user_owns_item
+def deleteItem(category_name, item_name):
+    current_category = db_session.query(Category).filter_by(name=category_name).one()
+    item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
+    db_session.delete(item)
+    db_session.commit()
+    flash('Item "%s" successfully deleted' % item.name)
+    return redirect(url_for('index'))
 
 
 @app.route('/login/')
