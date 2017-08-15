@@ -1,11 +1,16 @@
 from flask import Flask, render_template, url_for, jsonify, session, request, make_response, redirect, flash, abort
-from sqlalchemy import create_engine, asc, desc
 
+from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, User, Category, Item
+
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import FlowExchangeError
 
 import httplib2, json, requests, random, string
 from functools import wraps
+
+from database_setup import Base, User, Category, Item
+
 
 app = Flask(__name__)
 
@@ -255,7 +260,14 @@ def fbdisconnect():
     result = h.request(url, 'DELETE')[1]
     return 'You have been logged out'
 
+# Google OAuth
+@app.route('/gconnect', methods=['POST'])
+def gconnect():
+    pass
 
+@app.route('/gdisconnect')
+def gdisconnect():
+    pass
 
 # JSON API.
 @app.route('/catalog.json/')

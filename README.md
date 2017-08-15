@@ -3,6 +3,7 @@ Study project. Applying knowledge
 about SQLAlchemy ORM, Flask framework, and OAuth.
 
 ## Running on VM
+
 ### Prerequisites
 * Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
 * Install [Vagrant](https://www.vagrantup.com/)
@@ -25,10 +26,16 @@ about SQLAlchemy ORM, Flask framework, and OAuth.
 `cd /vagrant/ItemCatalog`
 
 ### OAuth Credentials
+
 #### Facebook login
-* to get credentials for Facebook, create a project in [Facebook developer console](https://developers.facebook.com/)
-* update file **fb_client_secrets.json** with your app_id and app_secret
-* go to file `cd templates/login.html` and update value **appId** in line 9
+* To get credentials for Facebook, create a project in [Facebook developer console](https://developers.facebook.com/)
+* Update file **fb_client_secrets.json** with your app_id and app_secret
+* Go to file `cd templates/login.html` and update value **appId** in line 9
+
+#### Google login
+* To get credential for Google, create a project in [Google developer console](https://console.developers.google.com)
+* Go to credentials page and add URIs for Web client
+* Download json with credentials with name **g_client_secrets.json** in the *ItemCatalog* folder
 
 ### Run project
 * To initialize PostgreSQL database run<br>
