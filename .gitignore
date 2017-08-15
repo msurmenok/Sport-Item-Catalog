@@ -104,3 +104,5 @@ ENV/
 .idea/
 
 fb_client_secrets.json
+
+g_client_secrets.json
