@@ -36,7 +36,7 @@ about SQLAlchemy ORM, Flask framework, and OAuth.
 * To get credential for Google, create a project in [Google developer console](https://console.developers.google.com)
 * Go to credentials page and add URIs for Web client
 * Download json with credentials with name **g_client_secrets.json** in the *ItemCatalog* folder
-* Go to file `cd templates/login.html' and update value **data-clientid** in line 66
+* Go to file `cd templates/login.html` and update value **data-clientid** in line 66
 ### Run project
 * To initialize PostgreSQL database run<br>
 `bash create_db.sh`

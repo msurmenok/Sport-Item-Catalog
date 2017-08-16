@@ -1,4 +1,5 @@
-from flask import Flask, render_template, url_for, jsonify, session, request, make_response, redirect, flash, abort
+from flask import Flask, jsonify,  redirect, flash, abort
+from flask import render_template, url_for, session, request, make_response
 
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
@@ -7,7 +8,12 @@ from sqlalchemy.orm.exc import NoResultFound
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 
-import httplib2, json, requests, random, string
+import httplib2
+import json
+import requests
+import random
+import string
+
 from functools import wraps
 
 from database_setup import Base, User, Category, Item
@@ -39,9 +45,12 @@ def user_owns_item(function):
     """ Decorator that checks that the item was created by current user. """
     @wraps(function)
     def wrapper(category_name, item_name, *args, **kwargs):
-        category = db_session.query(Category).filter_by(name=category_name).one()
+        category = db_session.query(Category
+                                    ).filter_by(name=category_name).one()
         user_id = session['user_id']
-        item = db_session.query(Item).filter_by(category=category, name=item_name).one()
+        item = db_session.query(Item
+                                ).filter_by(category=category, name=item_name
+                                            ).one()
 
         if item.user_id == user_id:
             return function(category_name, item_name, *args, **kwargs)
@@ -58,18 +67,23 @@ def index():
     categories = db_session.query(Category).order_by(Category.name)
     last_items = db_session.query(Item).order_by(desc(Item.id)).limit(10)
 
-    return render_template('index.html', categories=categories, items=last_items)
+    return render_template('index.html',
+                           categories=categories, items=last_items)
 
 
 @app.route('/catalog/<category_name>/')
 def showCategory(category_name):
     """ Show all items of the specific category. """
     categories = db_session.query(Category).order_by(Category.name)
-    current_category = db_session.query(Category).filter_by(name=category_name).one()
-    items = db_session.query(Item).filter_by(category_id=current_category.id).all()
+    current_category = db_session.query(Category
+                                        ).filter_by(name=category_name).one()
+    items = db_session.query(Item
+                             ).filter_by(category_id=current_category.id).all()
 
-    return render_template('category.html', items=items,
-                           current_category=current_category, categories=categories)
+    return render_template('category.html',
+                           items=items,
+                           current_category=current_category,
+                           categories=categories)
 
 
 @app.route('/catalog/<category_name>/<item_name>/')
@@ -80,8 +94,12 @@ def viewItem(category_name, item_name):
         category_name(str): Name of the parent category.
         item_name(str): Name of the item.
     """
-    current_category = db_session.query(Category).filter_by(name=category_name).one()
-    item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
+    current_category = db_session.query(Category
+                                        ).filter_by(name=category_name).one()
+    item = db_session.query(Item
+                            ).filter_by(category_id=current_category.id,
+                                        name=item_name
+                                        ).one()
     return render_template('item.html', category_name=category_name, item=item)
 
 
@@ -91,7 +109,9 @@ def addNewItem():
     """ Create new item. """
     categories = db_session.query(Category).order_by(Category.name)
     if request.method == 'GET':
-        return render_template('create_item.html', categories=categories, info=None)
+        return render_template('create_item.html',
+                               categories=categories,
+                               info=None)
     if request.method == 'POST':
         item_name = request.form['item_name']
         description = request.form['description']
@@ -103,16 +123,21 @@ def addNewItem():
         info['category_id'] = category_id
         if not item_name:
             info['error'] = 'Name cannot be empty'
-            return render_template('create_item.html', categories=categories, info=info)
+            return render_template('create_item.html',
+                                   categories=categories,
+                                   info=info)
 
         # Check if such item is already exists.
         items = db_session.query(Item).filter_by(category_id=category_id).all()
         names = [item.name for item in items]
         if item_name in names:
             info['error'] = 'Such item already exists'
-            return render_template('create_item.html', categories=categories, info=info)
+            return render_template('create_item.html',
+                                   categories=categories,
+                                   info=info)
 
-        new_item = Item(name=item_name, description=description, category_id=category_id, user_id=session['user_id'])
+        new_item = Item(name=item_name, description=description,
+                        category_id=category_id, user_id=session['user_id'])
         db_session.add(new_item)
         db_session.commit()
 
@@ -120,7 +145,8 @@ def addNewItem():
     return redirect(url_for('index'))
 
 
-@app.route('/catalog/<category_name>/<item_name>/edit/', methods=['GET', 'POST'])
+@app.route('/catalog/<category_name>/<item_name>/edit/',
+           methods=['GET', 'POST'])
 @user_logged_in
 @user_owns_item
 def editItem(category_name, item_name):
@@ -132,8 +158,12 @@ def editItem(category_name, item_name):
     """
     categories = db_session.query(Category).order_by(Category.name)
 
-    current_category = db_session.query(Category).filter_by(name=category_name).one()
-    item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
+    current_category = db_session.query(Category
+                                        ).filter_by(name=category_name).one()
+    item = db_session.query(Item
+                            ).filter_by(category_id=current_category.id,
+                                        name=item_name
+                                        ).one()
 
     info = dict()
     info['item_name'] = item.name
@@ -143,7 +173,9 @@ def editItem(category_name, item_name):
     info['error'] = ''
 
     if request.method == 'GET':
-        return render_template('edit_item.html', categories=categories, info=info)
+        return render_template('edit_item.html',
+                               categories=categories,
+                               info=info)
 
     if request.method == 'POST':
         item_name = request.form['item_name']
@@ -159,14 +191,19 @@ def editItem(category_name, item_name):
         info['category_id'] = category_id
         if not item_name:
             info['error'] = 'Name cannot be empty'
-            return render_template('edit_item.html', categories=categories, info=info)
+            return render_template('edit_item.html',
+                                   categories=categories,
+                                   info=info)
 
         # Check if such item is already exists.
         items = db_session.query(Item).filter_by(category_id=category_id).all()
         names = [i.name for i in items]
         if item_name != item.name and item_name in names:
-            info['error'] = 'Item "%s" is already exists. The old one %s' % (item_name, item.name)
-            return render_template('edit_item.html', categories=categories, info=info)
+            info['error'] = 'Item "%s" is already exists. The old one %s' % \
+                            (item_name, item.name)
+            return render_template('edit_item.html',
+                                   categories=categories,
+                                   info=info)
 
         item.name = item_name
         item.description = description
@@ -187,8 +224,12 @@ def deleteItem(category_name, item_name):
         category_name(str): Name of parent category.
         item_name(str): Name of the item that should be deleted.
     """
-    current_category = db_session.query(Category).filter_by(name=category_name).one()
-    item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
+    current_category = db_session.query(Category
+                                        ).filter_by(name=category_name).one()
+    item = db_session.query(Item
+                            ).filter_by(category_id=current_category.id,
+                                        name=item_name
+                                        ).one()
     db_session.delete(item)
     db_session.commit()
     flash('Item "%s" successfully deleted' % item.name)
@@ -198,7 +239,8 @@ def deleteItem(category_name, item_name):
 @app.route('/login/')
 def login():
     """ User log in. """
-    state = ''.join([random.choice(string.ascii_letters + string.digits) for x in range(0, 32)])
+    state = ''.join([random.choice(string.ascii_letters + string.digits)
+                     for x in range(0, 32)])
     session['state'] = state
     return render_template('login.html', state=state)
 
@@ -259,7 +301,6 @@ def fbconnect():
     session['facebook_id'] = data['id']
     session['access_token'] = access_token
 
-
     # Get user picture.
     url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token  # NOQA
     h = httplib2.Http()
@@ -292,7 +333,8 @@ def fbdisconnect():
     """ Sign out from Facebook account. """
     facebook_id = session['facebook_id']
     access_token = session['access_token']
-    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id, access_token)
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % \
+          (facebook_id, access_token)
     h = httplib2.Http()
     result = h.request(url, 'DELETE')[1]
     return 'You have been logged out'
@@ -379,7 +421,8 @@ def gconnect():
 @app.route('/gdisconnect')
 def gdisconnect():
     """ Sign out from Google account. """
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % \
+          session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     if result['status'] == '200':
@@ -393,7 +436,8 @@ def gdisconnect():
 def getCatalogJSON():
     """ JSON endpoint for all categories and their items. """
     categories = db_session.query(Category).all()
-    return jsonify(Category=[createCategoryDict(category) for category in categories])
+    return jsonify(Category=[createCategoryDict(category)
+                             for category in categories])
 
 
 @app.route('/<category_name>.json/')
@@ -409,7 +453,9 @@ def getCategoryJSON(category_name):
 def getItemJSON(category_name, item_name):
     """ JSON endpoint for the specific item. """
     category = db_session.query(Category).filter_by(name=category_name).one()
-    item = db_session.query(Item).filter_by(name=item_name, category=category).one()
+    item = db_session.query(Item
+                            ).filter_by(name=item_name, category=category
+                                        ).one()
     return jsonify(Item=item.serialize)
 
 
