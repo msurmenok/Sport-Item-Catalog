@@ -63,7 +63,7 @@
             <div id="signInButton">
                 <span class="g-signin"
                       data-scope="openid email"
-                      data-clientid="194180468220-8jb7jgd9ojn882uc36bcpb3pnt35ehqb.apps.googleusercontent.com"
+                      data-clientid="611673228707-kuch7hqst764r201k1gdrlphe0tlt6qv.apps.googleusercontent.com"
                       data-redirecturi="postmessage"
                       data-accesstype="offline"
                       data-cookiepolicy="single_host_origin"
@@ -80,13 +80,13 @@
 
                 $.ajax({
                     type: 'POST',
-                    url: '/gconnect?state={state}',
+                    url: '/gconnect?state={{ state }}',
                     processData: false,
                     data: authResult['code'],
                     contentType: 'application/octet-stream; charset=utf-8',
                     success: function(result) {
                         if(result) {
-                            $('#result').html('login Successful!<br>' + result + '<br>Redirecting...')
+                            $('#result').html('Login Successful!<br>' + result + '<br>Redirecting...')
                             setTimeout(function () {
                                 window.location.href = '/'
                             }, 2000);

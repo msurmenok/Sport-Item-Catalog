@@ -179,17 +179,22 @@ def login():
 
 
 @app.route('/disconnect/')
+@user_logged_in
 def disconnect():
     provider = session.get('provider')
     if provider:
         if provider == 'facebook':
             fbdisconnect()
             del session['facebook_id']
+        if provider == 'google':
+            gdisconnect()
+            del session['gplus_id']
         del session['name']
         del session['email']
         del session['picture']
         del session['user_id']
         del session['provider']
+        del session['access_token']
         flash('You were successfully logged out.')
 
     return redirect(url_for('index'))
@@ -234,9 +239,10 @@ def fbconnect():
 
     session['picture'] = data["data"]["url"]
 
+    # If user doesn't exist, create a new one
     user_id = getUserID(session['email'])
     if not user_id:
-        createUser(session)
+        user_id = createUser(session)
     session['user_id'] = user_id
 
     output = ''
@@ -246,7 +252,8 @@ def fbconnect():
     output += '!</h1>'
     output += '<img src="'
     output += session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += '" style = "width: 200px; height: 200px;border-radius: 100px;' \
+              '-webkit-border-radius: 100px;-moz-border-radius: 100px;">'
     flash('You were successfully logged in as %s' % session['name'])
     return output
 
@@ -260,14 +267,106 @@ def fbdisconnect():
     result = h.request(url, 'DELETE')[1]
     return 'You have been logged out'
 
+
 # Google OAuth
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
-    pass
+    # Validate state token
+    if request.args.get('state') != session['state']:
+        response = make_response(json.dumps('Invalid state parameter.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    # Obtain authorization code
+    code = request.data
+
+    try:
+        # Upgrade the authorization code into a credentials object
+        oauth_flow = flow_from_clientsecrets('g_client_secrets.json', scope='')
+        oauth_flow.redirect_uri = 'postmessage'
+        credentials = oauth_flow.step2_exchange(code)
+    except FlowExchangeError:
+        response = make_response(
+            json.dumps('Failed to upgrade the authorization code.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    # Check that the access token is valid.
+    access_token = credentials.access_token
+    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
+           % access_token)
+    h = httplib2.Http()
+    result = json.loads(h.request(url, 'GET')[1])
+    # If there was an error in the access token info, abort.
+    if result.get('error') is not None:
+        response = make_response(json.dumps(result.get('error')), 500)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    # Verify that the access token is used for the intended user.
+    gplus_id = credentials.id_token['sub']
+    if result['user_id'] != gplus_id:
+        response = make_response(
+            json.dumps("Token's user ID doesn't match given user ID."), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+
+    stored_access_token = session.get('access_token')
+    stored_gplus_id = session.get('gplus_id')
+    if stored_access_token is not None and gplus_id == stored_gplus_id:
+        response = make_response(json.dumps('Current user is already connected.'),
+                                 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    # Store the access token in the session for later use.
+    session['access_token'] = credentials.access_token
+    session['gplus_id'] = gplus_id
+
+    # Get user info
+    userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
+    params = {'access_token': credentials.access_token, 'alt': 'json'}
+    result = requests.get(userinfo_url, params=params)
+
+    data = result.json()
+
+
+    session['provider'] = 'google'
+    session['name'] = data['name']
+    session['email'] = data['email']
+    session['gplus_id'] = gplus_id
+    session['picture'] = data['picture']
+    session['access_token'] = access_token
+
+    # If user doesn't exist, create a new one
+    user_id = getUserID(session['email'])
+    if not user_id:
+        user_id = createUser(session)
+    session['user_id'] = user_id
+
+    output = ''
+    output += '<h1>Welcome, '
+    output += session['name']
+
+    output += '!</h1>'
+    output += '<img src="'
+    output += session['picture']
+    output += '" style = "width: 200px; height: 200px;border-radius: 100px;' \
+              '-webkit-border-radius: 100px;-moz-border-radius: 100px;">'
+    flash('You were successfully logged in as %s' % session['name'])
+    return output
+
 
 @app.route('/gdisconnect')
 def gdisconnect():
-    pass
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % session['access_token']
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[0]
+    if result['status'] == '200':
+        return 'Successfully disconnected.'
+    else:
+        return 'Failed to revoke token for given user.'
+
 
 # JSON API.
 @app.route('/catalog.json/')
