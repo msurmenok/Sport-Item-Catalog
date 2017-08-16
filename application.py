@@ -2,6 +2,7 @@ from flask import Flask, render_template, url_for, jsonify, session, request, ma
 
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
@@ -24,6 +25,7 @@ db_session = DBSession()
 
 # Decorators
 def user_logged_in(function):
+    """ Decorator that checks if user is logged in. """
     @wraps(function)
     def wrapper(*args, **kwargs):
         if 'user_id' in session:
@@ -34,6 +36,7 @@ def user_logged_in(function):
 
 
 def user_owns_item(function):
+    """ Decorator that checks that the item was created by current user. """
     @wraps(function)
     def wrapper(category_name, item_name, *args, **kwargs):
         category = db_session.query(Category).filter_by(name=category_name).one()
@@ -51,6 +54,7 @@ def user_owns_item(function):
 @app.route('/')
 @app.route('/catalog/')
 def index():
+    """ Main page. Show all categories and 10 latest item. """
     categories = db_session.query(Category).order_by(Category.name)
     last_items = db_session.query(Item).order_by(desc(Item.id)).limit(10)
 
@@ -59,6 +63,7 @@ def index():
 
 @app.route('/catalog/<category_name>/')
 def showCategory(category_name):
+    """ Show all items of the specific category. """
     categories = db_session.query(Category).order_by(Category.name)
     current_category = db_session.query(Category).filter_by(name=category_name).one()
     items = db_session.query(Item).filter_by(category_id=current_category.id).all()
@@ -69,6 +74,12 @@ def showCategory(category_name):
 
 @app.route('/catalog/<category_name>/<item_name>/')
 def viewItem(category_name, item_name):
+    """
+    View specific item
+    Args:
+        category_name(str): Name of the parent category.
+        item_name(str): Name of the item.
+    """
     current_category = db_session.query(Category).filter_by(name=category_name).one()
     item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
     return render_template('item.html', category_name=category_name, item=item)
@@ -77,6 +88,7 @@ def viewItem(category_name, item_name):
 @app.route('/catalog/new/', methods=['GET', 'POST'])
 @user_logged_in
 def addNewItem():
+    """ Create new item. """
     categories = db_session.query(Category).order_by(Category.name)
     if request.method == 'GET':
         return render_template('create_item.html', categories=categories, info=None)
@@ -112,6 +124,12 @@ def addNewItem():
 @user_logged_in
 @user_owns_item
 def editItem(category_name, item_name):
+    """
+    Edit specific item.
+    Args:
+        category_name(str): Name of parent category.
+        item_name(str): Name of the item that should be edited.
+    """
     categories = db_session.query(Category).order_by(Category.name)
 
     current_category = db_session.query(Category).filter_by(name=category_name).one()
@@ -163,6 +181,12 @@ def editItem(category_name, item_name):
 @user_logged_in
 @user_owns_item
 def deleteItem(category_name, item_name):
+    """
+    Delete specific item.
+    Args:
+        category_name(str): Name of parent category.
+        item_name(str): Name of the item that should be deleted.
+    """
     current_category = db_session.query(Category).filter_by(name=category_name).one()
     item = db_session.query(Item).filter_by(category_id=current_category.id, name=item_name).one()
     db_session.delete(item)
@@ -173,6 +197,7 @@ def deleteItem(category_name, item_name):
 
 @app.route('/login/')
 def login():
+    """ User log in. """
     state = ''.join([random.choice(string.ascii_letters + string.digits) for x in range(0, 32)])
     session['state'] = state
     return render_template('login.html', state=state)
@@ -181,6 +206,7 @@ def login():
 @app.route('/disconnect/')
 @user_logged_in
 def disconnect():
+    """ User log out. """
     provider = session.get('provider')
     if provider:
         if provider == 'facebook':
@@ -203,22 +229,25 @@ def disconnect():
 # Facebook OAuth
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
+    """ Sign in using Facebook account. """
     if request.args.get('state') != session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     access_token = request.data
-    app_id = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_id']
-    app_secret = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_secret']
+    app_id = json.loads(
+        open('fb_client_secrets.json', 'r').read())['web']['app_id']
+    app_secret = json.loads(
+        open('fb_client_secrets.json', 'r').read())['web']['app_secret']
 
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' %\
-          (app_id, app_secret, access_token)
+    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (  # NOQA
+        app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
 
     token = result.split(',')[0].split(':')[1].replace('"', '')
-    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token
+    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token  # NOQA
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
 
@@ -232,7 +261,7 @@ def fbconnect():
 
 
     # Get user picture.
-    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
+    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token  # NOQA
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -260,6 +289,7 @@ def fbconnect():
 
 @app.route('/fbdisconnect/')
 def fbdisconnect():
+    """ Sign out from Facebook account. """
     facebook_id = session['facebook_id']
     access_token = session['access_token']
     url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id, access_token)
@@ -271,6 +301,7 @@ def fbdisconnect():
 # Google OAuth
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    """ Sign in using Google account. """
     # Validate state token
     if request.args.get('state') != session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
@@ -302,34 +333,22 @@ def gconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    # Verify that the access token is used for the intended user.
     gplus_id = credentials.id_token['sub']
-    if result['user_id'] != gplus_id:
-        response = make_response(
-            json.dumps("Token's user ID doesn't match given user ID."), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-
     stored_access_token = session.get('access_token')
     stored_gplus_id = session.get('gplus_id')
+
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(json.dumps
+                                 ('Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
-
-    # Store the access token in the session for later use.
-    session['access_token'] = credentials.access_token
-    session['gplus_id'] = gplus_id
 
     # Get user info
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-    params = {'access_token': credentials.access_token, 'alt': 'json'}
+    params = {'access_token': access_token, 'alt': 'json'}
     result = requests.get(userinfo_url, params=params)
 
     data = result.json()
-
 
     session['provider'] = 'google'
     session['name'] = data['name']
@@ -359,6 +378,7 @@ def gconnect():
 
 @app.route('/gdisconnect')
 def gdisconnect():
+    """ Sign out from Google account. """
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
@@ -371,6 +391,7 @@ def gdisconnect():
 # JSON API.
 @app.route('/catalog.json/')
 def getCatalogJSON():
+    """ JSON endpoint for all categories and their items. """
     categories = db_session.query(Category).all()
     return jsonify(Category=[createCategoryDict(category) for category in categories])
 
@@ -378,6 +399,7 @@ def getCatalogJSON():
 @app.route('/<category_name>.json/')
 @app.route('/catalog/<category_name>.json/')
 def getCategoryJSON(category_name):
+    """ JSON endpoint for the specific category. """
     category = db_session.query(Category).filter_by(name=category_name).one()
     return jsonify(Category=createCategoryDict(category))
 
@@ -385,6 +407,7 @@ def getCategoryJSON(category_name):
 @app.route('/<category_name>/<item_name>.json/')
 @app.route('/catalog/<category_name>/<item_name>.json/')
 def getItemJSON(category_name, item_name):
+    """ JSON endpoint for the specific item. """
     category = db_session.query(Category).filter_by(name=category_name).one()
     item = db_session.query(Item).filter_by(name=item_name, category=category).one()
     return jsonify(Item=item.serialize)
@@ -392,6 +415,14 @@ def getItemJSON(category_name, item_name):
 
 # JSON helper functions.
 def createCategoryDict(category):
+    """
+    Creates serialized representation of the category and all its items.
+    Args:
+        category(Category): Object of category that will be serialized.
+    Returns:
+        Serialized representation (dictionary) of the category
+        and its items.
+    """
     serialized_category = category.serialize
 
     items = db_session.query(Item).filter_by(category_id=category.id).all()
@@ -402,7 +433,17 @@ def createCategoryDict(category):
 
 # User helper functions.
 def createUser(session):
-    new_user = User(name=session['name'], email=session['email'], picture=session['picture'])
+    """
+    Creates new user in Database.
+    Args:
+        session(Flask session): Current session with user information.
+    Returns:
+        Id of created user.
+    """
+    new_user = User(
+        name=session['name'],
+        email=session['email'],
+        picture=session['picture'])
     db_session.add(new_user)
     db_session.commit()
     user = db_session.query(User).filter_by(email=session['email']).one()
@@ -410,15 +451,29 @@ def createUser(session):
 
 
 def getUserInfo(user_id):
+    """
+    Finds user by his/her id
+    Args:
+        user_id(str): User's id.
+    Returns:
+        User object.
+    """
     user = db_session.query(User).filter_by(id=user_id).one()
     return user
 
 
 def getUserID(email):
+    """
+    Finds user id by his/her email
+    Args:
+        email (str): User's email.
+    Returns:
+        User id if user exists, otherwise None.
+    """
     try:
         user = db_session.query(User).filter_by(email=email).one()
         return user.id
-    except:
+    except NoResultFound:
         return None
 
 
