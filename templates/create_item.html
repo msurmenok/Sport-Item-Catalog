@@ -9,13 +9,14 @@
             {% endif %}
             <form action="{{ url_for('addNewItem') }}" method="POST">
                 <!-- name, description, category -->
-                <input type="text" name="item_name" placeholder="Item name">
-
+                <input class="form-control" type="text" name="item_name" placeholder="Item name">
+                <br>
                 {% if info %}
-                    <input type="text" name="description" placeholder="description (optional)" value="{{ info['description'] }}">
-                    <select name="category_id">
+                    <textarea class="form-control" rows="5" name="description" placeholder="description (optional)">{{ info['description'] }}</textarea>
+                    <br>
+                    <select class="form-control" name="category_id">
                         {% for category in categories %}
-                            {% if category.id == info['category_id'] %}
+                            {% if category.id == info['category_id']|int %}
                                 <option value="{{ category.id }}" selected>{{ category.name }}</option>
                             {% else %}
                                 <option value="{{ category.id }}">{{ category.name }}</option>
@@ -23,14 +24,16 @@
                         {% endfor %}
                     </select>
                 {% else %}
-                    <input type="text" name="description" placeholder="description (optional)">
-                    <select name="category_id">
+                    <textarea class="form-control" rows="5" name="description" placeholder="description (optional)">{{ info['description'] }}</textarea>
+                    <br>
+                    <select class="form-control" name="category_id">
                         {% for category in categories %}
                             <option value="{{ category.id }}">{{ category.name }}</option>
                         {% endfor %}
                     </select>
                 {% endif %}
-                <input type="submit" value="Submit">
+                <br>
+                <input class="btn btn-default" type="submit" value="Submit">
             </form>
         </div>
     </div>

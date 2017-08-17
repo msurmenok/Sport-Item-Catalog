@@ -2,12 +2,12 @@
 {% block content %}
 {% include "header.html" %}
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-12 flashes">
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
-                    <ul class="flashes">
+                    <ul>
                         {% for message in messages %}
-                        <li>
+                        <li class="bg-success">
                             {{ message }}
                         </li>
                         {% endfor %}
@@ -30,21 +30,19 @@
             </ul>
         </div>
         <div class="col-md-7">
-            {% if 'user_id' in session %}
-                <a href="/catalog/new">Add Item</a>
-            {% endif %}
             <h2>Latest Items</h2>
+                {% if 'user_id' in session %}
+                    <a class="btn btn-default btn-lg" href="/catalog/new">Add New Item</a>
+                {% endif %}
             <ul>
-                <ul>
-                    {% for item in items %}
-                    <a href="{{ url_for('viewItem', category_name=item.category.name, item_name=item.name) }}">
-                        <li>
-                            {{ item.name }}
-                            <span class="text-grey">({{ item.category.name }})</span>
-                        </li>
-                    </a>
-                    {% endfor %}
-                </ul>
+                {% for item in items %}
+                <a href="{{ url_for('viewItem', category_name=item.category.name, item_name=item.name) }}">
+                    <li>
+                        {{ item.name }}
+                        <span class="text-grey">({{ item.category.name }})</span>
+                    </li>
+                </a>
+                {% endfor %}
             </ul>
         </div>
     </div>

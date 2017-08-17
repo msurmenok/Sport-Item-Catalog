@@ -48,3 +48,21 @@ ul li a {
 .text-grey {
     color: grey;
 }
+
+#signInButton img{
+    margin-left: -5px;
+    width: 300px;
+}
+
+#f-signin {
+    margin: 20px 0 20px 0;
+}
+
+.flashes {
+    padding: 0;
+}
+
+.flashes ul li {
+    margin: 0;
+    padding: 10px 0 10px 20px;
+}

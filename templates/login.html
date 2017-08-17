@@ -36,7 +36,7 @@
                         success: function(result) {
                         if(result) {
                             $('.sign-in-btn').attr('style', 'display: none');
-                            $('#result').html('Login Successful!<br>' + result + '<br>Redirecting...')
+                            $('#result').html('<span class="bg-success">Login Successful!</span><br>' + result + '<br>Redirecting...')
                             setTimeout(function () {
                                 window.location.href = '/';
                             }, 2000);
@@ -52,7 +52,7 @@
 
 
     <div class="row">
-        <div class="col-md-12 sign-in-btn">
+        <div class="col-md-12 sign-in-btn" id="f-signin">
             <fb:login-button data-size="xlarge" scope="public_profile,email" onlogin="sendTokenToServer();">
                 <a href="javascript:sendTokenToServer()">Login with Facebook</a>
             </fb:login-button>
@@ -69,6 +69,8 @@
                       data-cookiepolicy="single_host_origin"
                       data-callback="signInCallback"
                       data-approvalprompt="force">
+                    <a href="javascript:signInCallback()">
+                        <img src="{{ url_for('static', filename='btn_google_signin_dark_normal_web@2x.png') }}"></a>
                 </span>
             </div>
         </div>
@@ -86,7 +88,7 @@
                     contentType: 'application/octet-stream; charset=utf-8',
                     success: function(result) {
                         if(result) {
-                            $('#result').html('Login Successful!<br>' + result + '<br>Redirecting...')
+                            $('#result').html('<span class="bg-success">Login Successful!</span><br>' + result + '<br>Redirecting...')
                             setTimeout(function () {
                                 window.location.href = '/'
                             }, 2000);

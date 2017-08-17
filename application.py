@@ -320,10 +320,9 @@ def fbconnect():
     output += session['name']
 
     output += '!</h1>'
-    output += '<img src="'
+    output += '<img class="img-circle" src="'
     output += session['picture']
-    output += '" style = "width: 200px; height: 200px;border-radius: 100px;' \
-              '-webkit-border-radius: 100px;-moz-border-radius: 100px;">'
+    output += '" style = "width: 200px; height: 200px;">'
     flash('You were successfully logged in as %s' % session['name'])
     return output
 
@@ -410,10 +409,9 @@ def gconnect():
     output += session['name']
 
     output += '!</h1>'
-    output += '<img src="'
+    output += '<img class="img-circle" src="'
     output += session['picture']
-    output += '" style = "width: 200px; height: 200px;border-radius: 100px;' \
-              '-webkit-border-radius: 100px;-moz-border-radius: 100px;">'
+    output += '" style = "width: 200px; height: 200px;">'
     flash('You were successfully logged in as %s' % session['name'])
     return output
 
