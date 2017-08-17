@@ -214,7 +214,8 @@ def editItem(category_name, item_name):
     return redirect(url_for('index'))
 
 
-@app.route('/catalog/<category_name>/<item_name>/delete/')
+@app.route('/catalog/<category_name>/<item_name>/delete/',
+           methods=['GET', 'POST'])
 @user_logged_in
 @user_owns_item
 def deleteItem(category_name, item_name):
@@ -230,10 +231,16 @@ def deleteItem(category_name, item_name):
                             ).filter_by(category_id=current_category.id,
                                         name=item_name
                                         ).one()
-    db_session.delete(item)
-    db_session.commit()
-    flash('Item "%s" successfully deleted' % item.name)
-    return redirect(url_for('index'))
+
+    if request.method == 'GET':
+        return render_template('delete_item.html',
+                               item=item, category_name=current_category.name)
+
+    if request.method == 'POST':
+        db_session.delete(item)
+        db_session.commit()
+        flash('Item "%s" successfully deleted' % item.name)
+        return redirect(url_for('index'))
 
 
 @app.route('/login/')
