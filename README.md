@@ -14,7 +14,7 @@ about SQLAlchemy ORM, Flask framework, and OAuth.
 * In terminal change directory to<br>
 `cd <your path>/fullstack-nanodegree-vm/vagrant`
 * Download project to vagrant folder<br>
-`git clone https://github.com/MariiaSurmenok/ItemCatalog.git`
+`git clone https://github.com/msurmenok/Sport-Item-Catalog.git`
 
 ### Start Virtual Machine
 * In terminal (in vagrant folder) launch virtual machine<br>
